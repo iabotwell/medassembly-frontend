@@ -79,10 +79,7 @@ export default function PatientDetailPage() {
           </div>
         </div>
         <div className="flex gap-2">
-          {patient.status === 'WAITING_TRIAGE' && can('triage:create') && (
-            <Link to={`/patients/${id}/triage`} className="px-4 py-2 bg-purple-600 text-white rounded-lg text-sm hover:bg-purple-700">Realizar Triage</Link>
-          )}
-          {patient.status === 'WAITING_ATTENTION' && can('attentions:create') && (
+          {(patient.status === 'WAITING_TRIAGE' || patient.status === 'WAITING_ATTENTION') && can('attentions:create') && (
             <button onClick={handleStartAttention} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Iniciar Atencion</button>
           )}
           {patient.status === 'IN_ATTENTION' && can('attentions:update') && (
