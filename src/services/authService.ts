@@ -2,20 +2,21 @@ import api from './api';
 import { AuthResponse, User } from '../types';
 
 export const authService = {
-  // Step 1: email + password → sends OTP
-  loginPassword: async (email: string, password: string): Promise<{ message: string; expiresInMinutes: number; email: string }> => {
+  // Login directo con email + password
+  login: async (email: string, password: string): Promise<AuthResponse> => {
     const { data } = await api.post('/auth/login', { email, password });
     return data;
   },
 
-  // Step 2: verify OTP → returns JWT
-  verifyOtp: async (email: string, code: string): Promise<AuthResponse> => {
-    const { data } = await api.post('/auth/verify-otp', { email, code });
+  // Alternativa: solicitar OTP por correo
+  requestOtp: async (email: string): Promise<{ message: string; expiresInMinutes: number }> => {
+    const { data } = await api.post('/auth/request-otp', { email });
     return data;
   },
 
-  resendOtp: async (email: string): Promise<{ message: string; expiresInMinutes: number }> => {
-    const { data } = await api.post('/auth/resend-otp', { email });
+  // Verificar OTP → retorna JWT
+  verifyOtp: async (email: string, code: string): Promise<AuthResponse> => {
+    const { data } = await api.post('/auth/verify-otp', { email, code });
     return data;
   },
 

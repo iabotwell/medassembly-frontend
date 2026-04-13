@@ -3,10 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
 
-type Step = 'credentials' | 'otp';
+type Mode = 'password' | 'otp-request' | 'otp-verify';
 
 export default function LoginPage() {
-  const [step, setStep] = useState<Step>('credentials');
+  const [mode, setMode] = useState<Mode>('password');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -25,18 +25,33 @@ export default function LoginPage() {
     }
   }, [resendCooldown]);
 
-  const handleLoginPassword = async (e: React.FormEvent) => {
+  const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setInfo('');
     setLoading(true);
     try {
-      const result = await authService.loginPassword(email, password);
-      setInfo(`Codigo enviado a ${result.email}. Expira en ${result.expiresInMinutes} minutos.`);
-      setStep('otp');
+      const result = await authService.login(email, password);
+      setAuth(result.user, result.accessToken, result.refreshToken);
+      navigate('/dashboard');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Error al iniciar sesion');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRequestOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError(''); setInfo('');
+    setLoading(true);
+    try {
+      const result = await authService.requestOtp(email);
+      setInfo(`Codigo enviado a ${email}. Expira en ${result.expiresInMinutes} minutos.`);
+      setMode('otp-verify');
       setResendCooldown(30);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al iniciar sesion');
+      setError(err.response?.data?.error || 'Error al solicitar codigo');
     } finally {
       setLoading(false);
     }
@@ -90,7 +105,7 @@ export default function LoginPage() {
     if (resendCooldown > 0) return;
     setError(''); setInfo('');
     try {
-      const result = await authService.resendOtp(email);
+      const result = await authService.requestOtp(email);
       setInfo(`Nuevo codigo enviado. Expira en ${result.expiresInMinutes} minutos.`);
       setResendCooldown(30);
     } catch (err: any) {
@@ -98,8 +113,8 @@ export default function LoginPage() {
     }
   };
 
-  const handleBack = () => {
-    setStep('credentials');
+  const backToPassword = () => {
+    setMode('password');
     setOtp(['', '', '', '', '', '']);
     setError(''); setInfo('');
   };
@@ -114,10 +129,10 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8">
-          {step === 'credentials' ? (
+          {mode === 'password' && (
             <>
               <h2 className="text-xl font-bold text-gray-900 mb-1">Iniciar Sesion</h2>
-              <p className="text-sm text-gray-500 mb-6">Ingresa tu correo y contrasena para recibir un codigo de verificacion</p>
+              <p className="text-sm text-gray-500 mb-6">Ingresa con tu correo y contrasena</p>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl mb-4 text-sm flex items-start gap-2">
@@ -125,49 +140,73 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleLoginPassword} className="space-y-4">
+              <form onSubmit={handlePasswordLogin} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">Correo electronico</label>
-                  <input
-                    type="email"
-                    value={email}
-                    onChange={e => setEmail(e.target.value)}
-                    required
-                    autoFocus
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="tu@correo.com"
-                  />
+                    placeholder="tu@correo.com" />
                 </div>
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">Contrasena</label>
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
+                  <input type="password" value={password} onChange={e => setPassword(e.target.value)} required
                     className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                    placeholder="••••••••"
-                  />
+                    placeholder="••••••••" />
                 </div>
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-semibold shadow-lg shadow-blue-600/20"
-                >
-                  {loading ? 'Verificando...' : 'Continuar'}
+                <button type="submit" disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-semibold shadow-lg shadow-blue-600/20">
+                  {loading ? 'Ingresando...' : 'Ingresar'}
                 </button>
-                <p className="text-xs text-gray-500 text-center mt-3">
-                  🔒 Se te enviara un codigo de verificacion a tu correo
-                </p>
+              </form>
+
+              <div className="mt-5 relative">
+                <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-gray-200" /></div>
+                <div className="relative flex justify-center text-xs"><span className="px-3 bg-white text-gray-400 uppercase tracking-wide">o</span></div>
+              </div>
+
+              <button type="button" onClick={() => { setMode('otp-request'); setError(''); setInfo(''); }}
+                className="mt-4 w-full border-2 border-gray-200 py-3 rounded-xl hover:bg-gray-50 text-sm font-semibold text-gray-700">
+                🔐 No recuerdo mi contrasena - Usar codigo
+              </button>
+            </>
+          )}
+
+          {mode === 'otp-request' && (
+            <>
+              <button onClick={backToPassword} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">
+                ← Volver al login con contrasena
+              </button>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Acceso por codigo</h2>
+              <p className="text-sm text-gray-500 mb-6">Te enviaremos un codigo a tu correo</p>
+
+              {error && (
+                <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl mb-4 text-sm flex items-start gap-2">
+                  <span>⚠️</span><span>{error}</span>
+                </div>
+              )}
+
+              <form onSubmit={handleRequestOtp} className="space-y-4">
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">Correo electronico</label>
+                  <input type="email" value={email} onChange={e => setEmail(e.target.value)} required autoFocus
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="tu@correo.com" />
+                </div>
+                <button type="submit" disabled={loading}
+                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-semibold shadow-lg shadow-blue-600/20">
+                  {loading ? 'Enviando...' : 'Enviar codigo'}
+                </button>
               </form>
             </>
-          ) : (
+          )}
+
+          {mode === 'otp-verify' && (
             <>
-              <button onClick={handleBack} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">
-                ← Volver
+              <button onClick={() => setMode('otp-request')} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">
+                ← Cambiar correo
               </button>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Verificacion en dos pasos</h2>
-              <p className="text-sm text-gray-500 mb-6">Enviamos un codigo de 6 digitos a <strong>{email}</strong></p>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Ingresa el codigo</h2>
+              <p className="text-sm text-gray-500 mb-6">Codigo de 6 digitos enviado a <strong>{email}</strong></p>
 
               {info && <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl mb-4 text-sm">{info}</div>}
               {error && (
@@ -178,35 +217,22 @@ export default function LoginPage() {
 
               <div className="flex justify-center gap-2 mb-5" onPaste={handleOtpPaste}>
                 {otp.map((digit, idx) => (
-                  <input
-                    key={idx}
-                    ref={el => { otpRefs.current[idx] = el; }}
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={1}
-                    value={digit}
-                    onChange={e => handleOtpChange(idx, e.target.value)}
-                    onKeyDown={e => handleOtpKeyDown(idx, e)}
+                  <input key={idx} ref={el => { otpRefs.current[idx] = el; }}
+                    type="text" inputMode="numeric" maxLength={1}
+                    value={digit} onChange={e => handleOtpChange(idx, e.target.value)} onKeyDown={e => handleOtpKeyDown(idx, e)}
                     disabled={loading}
-                    className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50"
-                  />
+                    className="w-11 h-14 sm:w-12 sm:h-14 text-center text-xl font-bold border-2 border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-50" />
                 ))}
               </div>
 
-              <button
-                onClick={() => handleVerifyOtp()}
-                disabled={loading || otp.some(d => !d)}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-semibold shadow-lg shadow-blue-600/20"
-              >
+              <button onClick={() => handleVerifyOtp()} disabled={loading || otp.some(d => !d)}
+                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-semibold shadow-lg shadow-blue-600/20">
                 {loading ? 'Verificando...' : 'Verificar y entrar'}
               </button>
 
               <div className="mt-4 text-center">
-                <button
-                  onClick={handleResend}
-                  disabled={resendCooldown > 0 || loading}
-                  className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 font-medium"
-                >
+                <button onClick={handleResend} disabled={resendCooldown > 0 || loading}
+                  className="text-sm text-blue-600 hover:text-blue-800 disabled:text-gray-400 font-medium">
                   {resendCooldown > 0 ? `Reenviar en ${resendCooldown}s` : 'Reenviar codigo'}
                 </button>
               </div>
