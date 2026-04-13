@@ -20,9 +20,15 @@ export default function UsersPage() {
   const [error, setError] = useState('');
 
   const fetchUsers = async () => {
-    const { data } = await api.get('/users');
-    setUsers(data);
-    setLoading(false);
+    setLoading(true);
+    try {
+      const { data } = await api.get('/users');
+      setUsers(data);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'No se pudo cargar la lista de usuarios');
+    } finally {
+      setLoading(false);
+    }
   };
 
   useEffect(() => { fetchUsers(); }, []);
