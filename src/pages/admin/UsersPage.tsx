@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { User, Role } from '../../types';
 
-const ROLE_LABELS: Record<Role, { label: string; color: string }> = {
+const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   ADMIN: { label: 'Super Admin', color: 'bg-purple-100 text-purple-800' },
   ENCARGADO_TURNO: { label: 'Encargado de Turno', color: 'bg-blue-100 text-blue-800' },
   ENCARGADO_SALUD: { label: 'Encargado de Salud', color: 'bg-teal-100 text-teal-800' },
@@ -11,6 +11,8 @@ const ROLE_LABELS: Record<Role, { label: string; color: string }> = {
   CAMILLERO: { label: 'Camillero', color: 'bg-orange-100 text-orange-800' },
   CONSULTA: { label: 'Consulta / Reportes', color: 'bg-gray-100 text-gray-800' },
 };
+
+const getRoleLabel = (role: string) => ROLE_LABELS[role] || { label: role, color: 'bg-gray-100 text-gray-600' };
 
 export default function UsersPage() {
   const [users, setUsers] = useState<User[]>([]);
@@ -105,7 +107,7 @@ export default function UsersPage() {
                 <h3 className="font-semibold text-gray-900 truncate">{u.name}</h3>
                 <p className="text-xs text-gray-500 truncate">{u.email}</p>
               </div>
-              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${ROLE_LABELS[u.role].color}`}>{ROLE_LABELS[u.role].label}</span>
+              <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${getRoleLabel(u.role).color}`}>{getRoleLabel(u.role).label}</span>
             </div>
             <div className="flex items-center justify-between mt-2">
               <span className={`px-2 py-0.5 rounded-full text-xs ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
@@ -139,7 +141,7 @@ export default function UsersPage() {
                 <td className="px-5 py-4 font-medium text-gray-900">{u.name}</td>
                 <td className="px-5 py-4 text-gray-600">{u.email}</td>
                 <td className="px-5 py-4">
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${ROLE_LABELS[u.role].color}`}>{ROLE_LABELS[u.role].label}</span>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${getRoleLabel(u.role).color}`}>{getRoleLabel(u.role).label}</span>
                 </td>
                 <td className="px-5 py-4">
                   <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
