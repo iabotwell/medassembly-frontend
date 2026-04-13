@@ -3,11 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { authService } from '../../services/authService';
 import { useAuthStore } from '../../stores/authStore';
 
-type Step = 'email' | 'otp';
+type Step = 'credentials' | 'otp';
 
 export default function LoginPage() {
-  const [step, setStep] = useState<Step>('email');
+  const [step, setStep] = useState<Step>('credentials');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [error, setError] = useState('');
   const [info, setInfo] = useState('');
@@ -24,18 +25,18 @@ export default function LoginPage() {
     }
   }, [resendCooldown]);
 
-  const handleRequestOtp = async (e: React.FormEvent) => {
+  const handleLoginPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(''); setInfo('');
     setLoading(true);
     try {
-      const result = await authService.requestOtp(email);
-      setInfo(`Te enviamos un codigo a ${email}. Expira en ${result.expiresInMinutes} minutos.`);
+      const result = await authService.loginPassword(email, password);
+      setInfo(`Codigo enviado a ${result.email}. Expira en ${result.expiresInMinutes} minutos.`);
       setStep('otp');
       setResendCooldown(30);
       setTimeout(() => otpRefs.current[0]?.focus(), 100);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al solicitar codigo');
+      setError(err.response?.data?.error || 'Error al iniciar sesion');
     } finally {
       setLoading(false);
     }
@@ -87,11 +88,18 @@ export default function LoginPage() {
 
   const handleResend = async () => {
     if (resendCooldown > 0) return;
-    await handleRequestOtp(new Event('submit') as any);
+    setError(''); setInfo('');
+    try {
+      const result = await authService.resendOtp(email);
+      setInfo(`Nuevo codigo enviado. Expira en ${result.expiresInMinutes} minutos.`);
+      setResendCooldown(30);
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Error al reenviar');
+    }
   };
 
   const handleBack = () => {
-    setStep('email');
+    setStep('credentials');
     setOtp(['', '', '', '', '', '']);
     setError(''); setInfo('');
   };
@@ -106,10 +114,10 @@ export default function LoginPage() {
         </div>
 
         <div className="bg-white rounded-3xl shadow-2xl p-6 sm:p-8">
-          {step === 'email' ? (
+          {step === 'credentials' ? (
             <>
               <h2 className="text-xl font-bold text-gray-900 mb-1">Iniciar Sesion</h2>
-              <p className="text-sm text-gray-500 mb-6">Te enviaremos un codigo de acceso a tu correo</p>
+              <p className="text-sm text-gray-500 mb-6">Ingresa tu correo y contrasena para recibir un codigo de verificacion</p>
 
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl mb-4 text-sm flex items-start gap-2">
@@ -117,7 +125,7 @@ export default function LoginPage() {
                 </div>
               )}
 
-              <form onSubmit={handleRequestOtp} className="space-y-4">
+              <form onSubmit={handleLoginPassword} className="space-y-4">
                 <div>
                   <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">Correo electronico</label>
                   <input
@@ -130,26 +138,38 @@ export default function LoginPage() {
                     placeholder="tu@correo.com"
                   />
                 </div>
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 uppercase tracking-wide mb-1.5">Contrasena</label>
+                  <input
+                    type="password"
+                    value={password}
+                    onChange={e => setPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 border border-gray-300 rounded-xl text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="••••••••"
+                  />
+                </div>
                 <button
                   type="submit"
                   disabled={loading}
                   className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-semibold shadow-lg shadow-blue-600/20"
                 >
-                  {loading ? 'Enviando...' : 'Enviar codigo'}
+                  {loading ? 'Verificando...' : 'Continuar'}
                 </button>
+                <p className="text-xs text-gray-500 text-center mt-3">
+                  🔒 Se te enviara un codigo de verificacion a tu correo
+                </p>
               </form>
             </>
           ) : (
             <>
               <button onClick={handleBack} className="text-sm text-gray-500 hover:text-gray-700 mb-4 flex items-center gap-1">
-                ← Cambiar correo
+                ← Volver
               </button>
-              <h2 className="text-xl font-bold text-gray-900 mb-1">Ingresa el codigo</h2>
+              <h2 className="text-xl font-bold text-gray-900 mb-1">Verificacion en dos pasos</h2>
               <p className="text-sm text-gray-500 mb-6">Enviamos un codigo de 6 digitos a <strong>{email}</strong></p>
 
-              {info && (
-                <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl mb-4 text-sm">{info}</div>
-              )}
+              {info && <div className="bg-blue-50 border border-blue-200 text-blue-800 p-3 rounded-xl mb-4 text-sm">{info}</div>}
               {error && (
                 <div className="bg-red-50 border border-red-200 text-red-800 p-3 rounded-xl mb-4 text-sm flex items-start gap-2">
                   <span>⚠️</span><span>{error}</span>
@@ -178,7 +198,7 @@ export default function LoginPage() {
                 disabled={loading || otp.some(d => !d)}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 text-white py-3.5 rounded-xl hover:from-blue-700 hover:to-blue-800 disabled:opacity-50 font-semibold shadow-lg shadow-blue-600/20"
               >
-                {loading ? 'Verificando...' : 'Verificar codigo'}
+                {loading ? 'Verificando...' : 'Verificar y entrar'}
               </button>
 
               <div className="mt-4 text-center">
