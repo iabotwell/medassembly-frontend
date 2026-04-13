@@ -2,8 +2,13 @@ import api from './api';
 import { AuthResponse, User } from '../types';
 
 export const authService = {
-  login: async (email: string, password: string): Promise<AuthResponse> => {
-    const { data } = await api.post('/auth/login', { email, password });
+  requestOtp: async (email: string): Promise<{ message: string; expiresInMinutes: number }> => {
+    const { data } = await api.post('/auth/request-otp', { email });
+    return data;
+  },
+
+  verifyOtp: async (email: string, code: string): Promise<AuthResponse> => {
+    const { data } = await api.post('/auth/verify-otp', { email, code });
     return data;
   },
 
