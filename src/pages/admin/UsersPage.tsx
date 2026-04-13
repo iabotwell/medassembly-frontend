@@ -4,11 +4,12 @@ import { User, Role } from '../../types';
 
 const ROLE_LABELS: Record<Role, { label: string; color: string }> = {
   ADMIN: { label: 'Super Admin', color: 'bg-purple-100 text-purple-800' },
-  ENCARGADO: { label: 'Encargado', color: 'bg-blue-100 text-blue-800' },
+  ENCARGADO_TURNO: { label: 'Encargado de Turno', color: 'bg-blue-100 text-blue-800' },
+  ENCARGADO_SALUD: { label: 'Encargado de Salud', color: 'bg-teal-100 text-teal-800' },
   DOCTOR: { label: 'Doctor', color: 'bg-green-100 text-green-800' },
-  ASISTENTE: { label: 'Asistente', color: 'bg-cyan-100 text-cyan-800' },
+  ASISTENTE: { label: 'Asistente de Salud', color: 'bg-cyan-100 text-cyan-800' },
   CAMILLERO: { label: 'Camillero', color: 'bg-orange-100 text-orange-800' },
-  CONSULTA: { label: 'Consulta', color: 'bg-gray-100 text-gray-800' },
+  CONSULTA: { label: 'Consulta / Reportes', color: 'bg-gray-100 text-gray-800' },
 };
 
 export default function UsersPage() {
@@ -73,11 +74,12 @@ export default function UsersPage() {
             <input placeholder="Contrasena" type="password" value={form.password} onChange={e => setForm(p => ({ ...p, password: e.target.value }))} className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
             <input placeholder="Telefono" value={form.phone} onChange={e => setForm(p => ({ ...p, phone: e.target.value }))} className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500" />
             <select value={form.role} onChange={e => setForm(p => ({ ...p, role: e.target.value as Role }))} className="px-3 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 sm:col-span-2">
-              <option value="ENCARGADO">Encargado</option>
+              <option value="ENCARGADO_TURNO">Encargado de Turno</option>
+              <option value="ENCARGADO_SALUD">Encargado de Salud</option>
               <option value="DOCTOR">Doctor</option>
-              <option value="ASISTENTE">Asistente</option>
+              <option value="ASISTENTE">Asistente de Salud</option>
               <option value="CAMILLERO">Camillero</option>
-              <option value="CONSULTA">Consulta</option>
+              <option value="CONSULTA">Consulta / Reportes</option>
               {!hasAdmin && <option value="ADMIN">Super Administrador (unico)</option>}
             </select>
           </div>
