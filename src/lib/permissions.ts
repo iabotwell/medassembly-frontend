@@ -2,7 +2,8 @@ import { Role } from '../types';
 
 const PERMISSIONS: Record<Role, string[]> = {
   ADMIN: ['*'],
-  ENCARGADO: ['patients:*', 'triage:*', 'attentions:read', 'shifts:*', 'emergency:sos', 'emergency:transfer', 'discharge', 'reports:*', 'dashboard:*', 'events:*'],
+  ENCARGADO_TURNO: ['patients:*', 'triage:read', 'attentions:read', 'shifts:*', 'emergency:sos', 'emergency:transfer', 'discharge', 'reports:*', 'dashboard:*', 'events:*', 'contacts:*'],
+  ENCARGADO_SALUD: ['patients:*', 'triage:*', 'attentions:*', 'measurements:*', 'discharge', 'emergency:*', 'supplies:*', 'reports:*', 'dashboard:*'],
   DOCTOR: ['patients:read', 'triage:*', 'attentions:*', 'measurements:*', 'discharge', 'emergency:*', 'reports:*', 'dashboard:*'],
   ASISTENTE: ['patients:create', 'patients:read', 'triage:*', 'attentions:create', 'attentions:update', 'measurements:*', 'emergency:camillero', 'dashboard:*'],
   CAMILLERO: ['dashboard:read'],

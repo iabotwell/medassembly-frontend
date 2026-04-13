@@ -1,4 +1,4 @@
-export type Role = 'ADMIN' | 'ENCARGADO' | 'DOCTOR' | 'ASISTENTE' | 'CAMILLERO' | 'CONSULTA';
+export type Role = 'ADMIN' | 'ENCARGADO_TURNO' | 'ENCARGADO_SALUD' | 'DOCTOR' | 'ASISTENTE' | 'CAMILLERO' | 'CONSULTA';
 export type PatientStatus = 'WAITING_TRIAGE' | 'WAITING_ATTENTION' | 'IN_ATTENTION' | 'IN_OBSERVATION' | 'IN_EMERGENCY' | 'DISCHARGED' | 'REFERRED';
 export type TriageColor = 'BLUE' | 'YELLOW' | 'RED';
 export type EmergencyLevel = 'SOS_DOCTOR' | 'EMERGENCY_VEHICLE' | 'TRANSFER' | 'AMBULANCE';

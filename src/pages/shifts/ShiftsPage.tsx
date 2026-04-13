@@ -44,7 +44,7 @@ export default function ShiftsPage() {
 
   const handleAddMember = async (shiftId: string) => {
     const userId = prompt('ID del usuario:');
-    const role = prompt('Rol (ENCARGADO, DOCTOR, ASISTENTE, CAMILLERO):');
+    const role = prompt('Rol (ENCARGADO_TURNO, ENCARGADO_SALUD, DOCTOR, ASISTENTE, CAMILLERO):');
     if (!userId || !role) return;
     await shiftService.addMember(shiftId, { userId, role });
     const data = await shiftService.list();
