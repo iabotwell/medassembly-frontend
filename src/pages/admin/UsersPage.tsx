@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { User, Role } from '../../types';
 import { useAuthStore } from '../../stores/authStore';
+import ContactActions from '../../components/ui/ContactActions';
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   ADMIN: { label: 'Super Admin', color: 'bg-purple-100 text-purple-800' },
@@ -188,6 +189,11 @@ export default function UsersPage() {
                 </div>
                 <span className={`px-2 py-0.5 rounded-full text-xs font-semibold flex-shrink-0 ${rl.color}`}>{rl.label}</span>
               </div>
+              {(u.phone || u.email) && (
+                <div className="mt-2 pb-2 border-b border-gray-100">
+                  <ContactActions phone={u.phone} email={u.email} name={u.name} />
+                </div>
+              )}
               <div className="flex items-center justify-between mt-2">
                 <span className={`px-2 py-0.5 rounded-full text-xs ${u.isActive ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
                   {u.isActive ? 'Activo' : 'Inactivo'}
@@ -217,6 +223,7 @@ export default function UsersPage() {
               <tr>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600 uppercase tracking-wide text-xs">Nombre</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600 uppercase tracking-wide text-xs">Email</th>
+                <th className="text-left px-5 py-3 font-semibold text-gray-600 uppercase tracking-wide text-xs">Contacto</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600 uppercase tracking-wide text-xs">Rol</th>
                 <th className="text-left px-5 py-3 font-semibold text-gray-600 uppercase tracking-wide text-xs">Estado</th>
                 <th className="px-5 py-3"></th>
@@ -233,6 +240,9 @@ export default function UsersPage() {
                       {u.phone && <div className="text-xs text-gray-500">{u.phone}</div>}
                     </td>
                     <td className="px-5 py-4 text-gray-600">{u.email}</td>
+                    <td className="px-5 py-4">
+                      <ContactActions phone={u.phone} email={u.email} name={u.name} />
+                    </td>
                     <td className="px-5 py-4">
                       <span className={`px-2.5 py-1 rounded-full text-xs font-semibold ${rl.color}`}>{rl.label}</span>
                     </td>
