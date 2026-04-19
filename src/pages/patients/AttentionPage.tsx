@@ -32,6 +32,7 @@ export default function AttentionPage() {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const prefilledRef = useRef(false);
+  const initialVitalsRef = useRef<VitalsState>(EMPTY_VITALS);
 
   useEffect(() => {
     if (!id || prefilledRef.current) return;
@@ -45,6 +46,23 @@ export default function AttentionPage() {
           medicationsGiven: att.medicationsGiven || '',
         });
         setHasInitialMeasurement((att.measurements?.length || 0) > 0);
+        // Prefill vitals from the most recent measurement (measurements are desc ordered in backend)
+        const lastMeasurement = att.measurements?.[0];
+        if (lastMeasurement) {
+          const prefilled: VitalsState = {
+            systolicBP: lastMeasurement.systolicBP != null ? String(lastMeasurement.systolicBP) : '',
+            diastolicBP: lastMeasurement.diastolicBP != null ? String(lastMeasurement.diastolicBP) : '',
+            heartRate: lastMeasurement.heartRate != null ? String(lastMeasurement.heartRate) : '',
+            respiratoryRate: lastMeasurement.respiratoryRate != null ? String(lastMeasurement.respiratoryRate) : '',
+            temperature: lastMeasurement.temperature != null ? String(lastMeasurement.temperature) : '',
+            oxygenSaturation: lastMeasurement.oxygenSaturation != null ? String(lastMeasurement.oxygenSaturation) : '',
+            bloodGlucose: lastMeasurement.bloodGlucose != null ? String(lastMeasurement.bloodGlucose) : '',
+            glasgowScore: lastMeasurement.glasgowScore != null ? String(lastMeasurement.glasgowScore) : '',
+            observation: lastMeasurement.observation || '',
+          };
+          setVitals(prefilled);
+          initialVitalsRef.current = prefilled;
+        }
       }
       prefilledRef.current = true;
     }).catch((err) => {
@@ -83,13 +101,16 @@ export default function AttentionPage() {
       }
       const updated = await attentionService.update(attention!.id, form);
 
-      const measurementPayload = buildMeasurementPayload();
-      if (Object.keys(measurementPayload).length > 0) {
-        await attentionService.addMeasurement(attention!.id, measurementPayload);
+      // Only add a new measurement if vitals actually changed from the prefilled values
+      const vitalsChanged = JSON.stringify(vitals) !== JSON.stringify(initialVitalsRef.current);
+      if (vitalsChanged) {
+        const measurementPayload = buildMeasurementPayload();
+        if (Object.keys(measurementPayload).length > 0) {
+          await attentionService.addMeasurement(attention!.id, measurementPayload);
+        }
       }
 
       setSuccess('Atencion guardada correctamente');
-      setVitals(EMPTY_VITALS);
       // Update form from server response to confirm persistence
       setForm({
         presumptiveDiagnosis: updated.presumptiveDiagnosis || '',
@@ -125,7 +146,7 @@ export default function AttentionPage() {
 
         {/* Vital signs */}
         <div>
-          <h2 className="font-bold text-lg mb-3">Signos Vitales {hasInitialMeasurement && <span className="text-xs text-gray-500 font-normal">(se agregara una nueva medicion a la bitacora)</span>}</h2>
+          <h2 className="font-bold text-lg mb-3">Signos Vitales {hasInitialMeasurement && <span className="text-xs text-gray-500 font-normal">(si modifica los valores se agregara una nueva medicion a la bitacora)</span>}</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
               <label className="block text-xs text-gray-600 mb-1">PA Sistolica (mmHg)</label>
