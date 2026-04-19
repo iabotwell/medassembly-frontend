@@ -14,7 +14,7 @@ const NAV_ITEMS = [
   { path: '/reports', label: 'Reportes', permission: 'reports:read', icon: '📋' },
   { path: '/admin/events', label: 'Eventos', permission: 'events:create', icon: '📅' },
   { path: '/admin/users', label: 'Usuarios', permission: 'users:read', icon: '👥' },
-  { path: '/admin/congregations', label: 'Congregaciones', permission: 'congregations:create', icon: '⛪' },
+  { path: '/admin/congregations', label: 'Congregaciones', permission: 'congregations:create', icon: '👥' },
   { path: '/admin/contacts', label: 'Contactos Emergencia', permission: 'contacts:create', icon: '📞' },
   { path: '/admin/supplies', label: 'Insumos', permission: 'supplies:create', icon: '💊' },
   { path: '/admin/triage-questions', label: 'Preguntas Triage', permission: 'triage:create', icon: '❓' },
