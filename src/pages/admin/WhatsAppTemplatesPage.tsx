@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { WhatsAppTemplate } from '../../types';
+import { useDialog } from '../../components/ui/Dialog';
 
 const TEMPLATE_LABELS: Record<string, { label: string; icon: string }> = {
   SOS_DOCTOR: { label: 'SOS Doctor', icon: '🚨' },
@@ -14,6 +15,7 @@ const TEMPLATE_LABELS: Record<string, { label: string; icon: string }> = {
 const VARIABLES = ['{paciente}', '{prioridad}', '{ubicacion}', '{hora}', '{atendido_por}', '{congregacion}', '{indicaciones}', '{motivo}', '{hora_inicio}', '{hora_fin}', '{evento}', '{rol}'];
 
 export default function WhatsAppTemplatesPage() {
+  const { alert: showAlert } = useDialog();
   const [templates, setTemplates] = useState<WhatsAppTemplate[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -39,7 +41,7 @@ export default function WhatsAppTemplatesPage() {
       setEditingId(null);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al guardar');
+      await showAlert({ title: 'Error al guardar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 
@@ -48,7 +50,7 @@ export default function WhatsAppTemplatesPage() {
       await api.put(`/whatsapp/templates/${t.id}`, { isActive: !t.isActive });
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error');
+      await showAlert({ title: 'Error', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 

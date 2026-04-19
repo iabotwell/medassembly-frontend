@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { EmergencyContact, ContactType } from '../../types';
+import { useDialog } from '../../components/ui/Dialog';
 
 const CONTACT_TYPES: { value: ContactType; label: string; icon: string }[] = [
   { value: 'DOCTOR_GUARDIA', label: 'Doctor de Guardia', icon: '👨‍⚕️' },
@@ -16,6 +17,7 @@ type FormState = { type: ContactType; name: string; phone: string; details: stri
 const EMPTY_FORM: FormState = { type: 'DOCTOR_GUARDIA', name: '', phone: '', details: '' };
 
 export default function ContactsPage() {
+  const { danger, alert: showAlert } = useDialog();
   const [contacts, setContacts] = useState<EmergencyContact[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -66,12 +68,13 @@ export default function ContactsPage() {
     }
   };
   const handleDelete = async (c: EmergencyContact) => {
-    if (!window.confirm(`Eliminar contacto "${c.name}"?`)) return;
+    const ok = await danger({ title: `Eliminar "${c.name}"?`, message: 'Esta accion es permanente.' });
+    if (!ok) return;
     try {
       await api.delete(`/contacts/${c.id}`);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 

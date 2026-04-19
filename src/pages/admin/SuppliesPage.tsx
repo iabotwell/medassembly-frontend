@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { Supply } from '../../types';
+import { useDialog } from '../../components/ui/Dialog';
 
 type FormState = { name: string; category: string; unit: string };
 const EMPTY_FORM: FormState = { name: '', category: '', unit: '' };
 
 export default function SuppliesPage() {
+  const { danger, alert: showAlert } = useDialog();
   const [supplies, setSupplies] = useState<Supply[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -56,12 +58,13 @@ export default function SuppliesPage() {
     }
   };
   const handleDelete = async (s: Supply) => {
-    if (!window.confirm(`Eliminar insumo "${s.name}"?`)) return;
+    const ok = await danger({ title: `Eliminar "${s.name}"?`, message: 'Esta accion es permanente.' });
+    if (!ok) return;
     try {
       await api.delete(`/supplies/${s.id}`);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 

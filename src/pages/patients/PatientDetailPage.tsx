@@ -4,6 +4,7 @@ import { patientService } from '../../services/patientService';
 import { attentionService } from '../../services/attentionService';
 import { emergencyService } from '../../services/emergencyService';
 import { usePermissions } from '../../hooks/usePermissions';
+import { useDialog } from '../../components/ui/Dialog';
 import { Patient, Measurement } from '../../types';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -16,6 +17,7 @@ export default function PatientDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { can } = usePermissions();
+  const { danger, alert: showAlert } = useDialog();
   const [patient, setPatient] = useState<Patient | null>(null);
   const [loading, setLoading] = useState(true);
   const [showMeasurementForm, setShowMeasurementForm] = useState(false);
@@ -44,43 +46,56 @@ export default function PatientDetailPage() {
     const hasData = (patient.attentions?.length || 0) > 0 || (patient.emergencies?.length || 0) > 0;
     let force = false;
     if (hasData) {
-      const msg = `El paciente "${patient.fullName}" tiene atenciones o emergencias registradas.\n\nOK = eliminar TODO (atenciones, mediciones, emergencias, triage)\nCancelar = no hacer nada`;
-      if (!window.confirm(msg)) return;
+      const ok = await danger({
+        title: `Eliminar ${patient.fullName}?`,
+        message: 'El paciente tiene atenciones o emergencias registradas.\n\nSe eliminaran TODOS sus datos: atenciones, mediciones, emergencias y triage.',
+        confirmText: 'Eliminar todo',
+      });
+      if (!ok) return;
       force = true;
     } else {
-      if (!window.confirm(`Eliminar al paciente "${patient.fullName}" de forma permanente?`)) return;
+      const ok = await danger({
+        title: `Eliminar ${patient.fullName}?`,
+        message: 'Esta accion es permanente y no se puede deshacer.',
+      });
+      if (!ok) return;
     }
     try {
       await patientService.remove(id, force);
       navigate('/patients');
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar el paciente');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 
   const handleDeleteAttention = async () => {
     const attention = patient?.attentions?.[0];
     if (!attention) return;
-    if (!window.confirm('Eliminar esta atencion?\n\nSe eliminaran todas las mediciones y registros de insumos asociados.')) return;
+    const ok = await danger({
+      title: 'Eliminar atencion?',
+      message: 'Se eliminaran todas las mediciones y registros de insumos asociados.',
+    });
+    if (!ok) return;
     try {
       await attentionService.remove(attention.id);
       const updated = await patientService.getDetail(id!);
       setPatient(updated);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar la atencion');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 
   const handleDeleteMeasurement = async (measurementId: string) => {
     const attention = patient?.attentions?.[0];
     if (!attention) return;
-    if (!window.confirm('Eliminar esta medicion?')) return;
+    const ok = await danger({ title: 'Eliminar medicion?', message: 'Esta accion es permanente.' });
+    if (!ok) return;
     try {
       await attentionService.removeMeasurement(attention.id, measurementId);
       const updated = await patientService.getDetail(id!);
       setPatient(updated);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar la medicion');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 
@@ -109,7 +124,7 @@ export default function PatientDetailPage() {
       const updated = await patientService.getDetail(id!);
       setPatient(updated);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo actualizar la medicion');
+      await showAlert({ title: 'No se pudo actualizar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 

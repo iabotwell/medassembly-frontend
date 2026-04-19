@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { triageService } from '../../services/triageService';
 import { TriageQuestion } from '../../types';
+import { useDialog } from '../../components/ui/Dialog';
 
 type FormState = {
   question: string;
@@ -19,6 +20,7 @@ const TYPE_LABELS: Record<string, string> = {
 };
 
 export default function TriageQuestionsPage() {
+  const { danger, alert: showAlert } = useDialog();
   const [questions, setQuestions] = useState<TriageQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -105,12 +107,13 @@ export default function TriageQuestionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Eliminar esta pregunta de forma permanente?')) return;
+    const ok = await danger({ title: 'Eliminar pregunta?', message: 'Esta accion es permanente.' });
+    if (!ok) return;
     try {
       await triageService.deleteQuestion(id);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 

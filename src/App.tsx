@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useAuthStore } from './stores/authStore';
 import { hasPermission } from './lib/permissions';
+import { DialogProvider } from './components/ui/Dialog';
 import MainLayout from './layouts/MainLayout';
 import LoginPage from './pages/auth/LoginPage';
 import DashboardPage from './pages/dashboard/DashboardPage';
@@ -54,6 +55,7 @@ function ProtectedRoute({ children, permission }: { children: React.ReactNode; p
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
+      <DialogProvider>
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
@@ -87,6 +89,7 @@ function App() {
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
         </Routes>
       </BrowserRouter>
+      </DialogProvider>
     </QueryClientProvider>
   );
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { shiftService } from '../../services/shiftService';
 import api from '../../services/api';
 import { Shift, User } from '../../types';
+import { useDialog } from '../../components/ui/Dialog';
 
 type ShiftForm = { date: string; startTime: string; endTime: string };
 const EMPTY_SHIFT: ShiftForm = { date: '', startTime: '', endTime: '' };
@@ -15,6 +16,7 @@ const ROLE_OPTIONS = [
 ];
 
 export default function ShiftsPage() {
+  const { danger, alert: showAlert } = useDialog();
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [activeEventId, setActiveEventId] = useState<string | null>(null);
@@ -89,27 +91,29 @@ export default function ShiftsPage() {
     fetchData();
   };
   const handleDelete = async (s: Shift) => {
-    if (!window.confirm('Eliminar este turno?')) return;
+    const ok = await danger({ title: 'Eliminar turno?', message: 'Esta accion es permanente.' });
+    if (!ok) return;
     try {
       await api.delete(`/shifts/${s.id}`);
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
   const handleAddMember = async (shiftId: string) => {
-    if (!memberForm.userId) { alert('Seleccione un usuario'); return; }
+    if (!memberForm.userId) { await showAlert({ title: 'Falta usuario', message: 'Seleccione un usuario antes de continuar' }); return; }
     try {
       await shiftService.addMember(shiftId, memberForm);
       setAddingMemberFor(null);
       setMemberForm({ userId: '', role: 'ASISTENTE' });
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al agregar miembro');
+      await showAlert({ title: 'Error al agregar miembro', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
   const handleRemoveMember = async (shiftId: string, memberId: string) => {
-    if (!window.confirm('Quitar este miembro del turno?')) return;
+    const ok = await danger({ title: 'Quitar miembro del turno?', confirmText: 'Quitar' });
+    if (!ok) return;
     await shiftService.removeMember(shiftId, memberId);
     fetchData();
   };

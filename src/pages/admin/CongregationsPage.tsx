@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { Congregation, Elder } from '../../types';
+import { useDialog } from '../../components/ui/Dialog';
 
 type CongForm = { name: string; circuit: string; city: string };
 type ElderForm = { name: string; phone: string; role: string };
@@ -9,6 +10,7 @@ const EMPTY_CONG: CongForm = { name: '', circuit: '', city: '' };
 const EMPTY_ELDER: ElderForm = { name: '', phone: '', role: '' };
 
 export default function CongregationsPage() {
+  const { danger, alert: showAlert } = useDialog();
   const [congregations, setCongregations] = useState<Congregation[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [elders, setElders] = useState<Elder[]>([]);
@@ -70,13 +72,14 @@ export default function CongregationsPage() {
     }
   };
   const handleDeleteCong = async (c: Congregation) => {
-    if (!window.confirm(`Eliminar congregacion "${c.name}"?`)) return;
+    const ok = await danger({ title: `Eliminar "${c.name}"?`, message: 'Esta accion es permanente.' });
+    if (!ok) return;
     try {
       await api.delete(`/congregations/${c.id}`);
       if (selectedId === c.id) { setSelectedId(null); setElders([]); }
       fetchData();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 
@@ -104,16 +107,17 @@ export default function CongregationsPage() {
       setElderForm(EMPTY_ELDER);
       fetchElders(selectedId);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error al guardar anciano');
+      await showAlert({ title: 'Error al guardar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
   const handleDeleteElder = async (e: Elder) => {
-    if (!window.confirm(`Eliminar a ${e.name}?`)) return;
+    const ok = await danger({ title: `Eliminar a ${e.name}?`, message: 'Esta accion es permanente.' });
+    if (!ok) return;
     try {
       await api.delete(`/congregations/${selectedId}/elders/${e.id}`);
       fetchElders(selectedId!);
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 

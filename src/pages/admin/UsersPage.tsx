@@ -3,6 +3,7 @@ import api from '../../services/api';
 import { User, Role } from '../../types';
 import { useAuthStore } from '../../stores/authStore';
 import ContactActions from '../../components/ui/ContactActions';
+import { useDialog } from '../../components/ui/Dialog';
 
 const ROLE_LABELS: Record<string, { label: string; color: string }> = {
   ADMIN: { label: 'Super Admin', color: 'bg-purple-100 text-purple-800' },
@@ -22,6 +23,7 @@ const EMPTY_FORM: FormState = { email: '', name: '', password: '', phone: '', ro
 
 export default function UsersPage() {
   const { user: currentUser } = useAuthStore();
+  const { danger, alert: showAlert } = useDialog();
   const [users, setUsers] = useState<User[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -95,17 +97,21 @@ export default function UsersPage() {
       await api.patch(`/users/${id}/toggle`);
       fetchUsers();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'Error');
+      await showAlert({ title: 'Error', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 
   const handleDelete = async (u: User) => {
-    if (!window.confirm(`Eliminar a ${u.name} de forma permanente?`)) return;
+    const ok = await danger({
+      title: `Eliminar a ${u.name}?`,
+      message: 'Esta accion es permanente y no se puede deshacer.',
+    });
+    if (!ok) return;
     try {
       await api.delete(`/users/${u.id}`);
       fetchUsers();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 

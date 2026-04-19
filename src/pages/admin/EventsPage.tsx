@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import api from '../../services/api';
 import { Event } from '../../types';
+import { useDialog } from '../../components/ui/Dialog';
 
 type FormState = { name: string; startDate: string; endDate: string; location: string; notes: string };
 const EMPTY_FORM: FormState = { name: '', startDate: '', endDate: '', location: '', notes: '' };
@@ -13,6 +14,7 @@ const toLocalInput = (date?: string) => {
 };
 
 export default function EventsPage() {
+  const { danger, alert: showAlert } = useDialog();
   const [events, setEvents] = useState<Event[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -81,12 +83,13 @@ export default function EventsPage() {
   };
 
   const handleDelete = async (e: Event) => {
-    if (!window.confirm(`Eliminar el evento "${e.name}" de forma permanente?`)) return;
+    const ok = await danger({ title: `Eliminar "${e.name}"?`, message: 'Esta accion es permanente y no se puede deshacer.' });
+    if (!ok) return;
     try {
       await api.delete(`/events/${e.id}`);
       fetchEvents();
     } catch (err: any) {
-      alert(err.response?.data?.error || 'No se pudo eliminar');
+      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
     }
   };
 
