@@ -128,26 +128,26 @@ export default function AttentionPage() {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <h1 className="text-2xl font-bold mb-2">Atencion Medica</h1>
-      <p className="text-gray-600 mb-6">Paciente: <strong>{patient.fullName}</strong> - {patient.age} anos - {patient.sex}</p>
+      <h1 className="text-xl sm:text-2xl font-bold mb-2">Atencion Medica</h1>
+      <p className="text-gray-600 mb-6 text-sm sm:text-base break-words">Paciente: <strong>{patient.fullName}</strong> - {patient.age} anos - {patient.sex}</p>
 
       {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm">{error}</div>}
       {success && <div className="bg-green-50 text-green-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">✓ {success}</div>}
 
-      <div className="bg-white rounded-xl border p-6 space-y-6">
+      <div className="bg-white rounded-xl border p-4 sm:p-6 space-y-6">
         {/* Patient summary */}
         <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-1">
-          <p><strong>Motivo:</strong> {patient.reasonForVisit}</p>
+          <p className="break-words"><strong>Motivo:</strong> {patient.reasonForVisit}</p>
           {patient.triage && <p><strong>Triage:</strong> <span className={`font-medium ${patient.triageColor === 'RED' ? 'text-red-600' : patient.triageColor === 'YELLOW' ? 'text-yellow-600' : 'text-blue-600'}`}>{patient.triageColor}</span></p>}
-          {patient.knownAllergies && <p className="text-red-600"><strong>Alergias:</strong> {patient.knownAllergies}</p>}
-          {patient.currentMedications && <p><strong>Medicamentos actuales:</strong> {patient.currentMedications}</p>}
-          {patient.chronicConditions && <p><strong>Condiciones cronicas:</strong> {patient.chronicConditions}</p>}
+          {patient.knownAllergies && <p className="text-red-600 break-words"><strong>Alergias:</strong> {patient.knownAllergies}</p>}
+          {patient.currentMedications && <p className="break-words"><strong>Medicamentos actuales:</strong> {patient.currentMedications}</p>}
+          {patient.chronicConditions && <p className="break-words"><strong>Condiciones cronicas:</strong> {patient.chronicConditions}</p>}
         </div>
 
         {/* Vital signs */}
         <div>
-          <h2 className="font-bold text-lg mb-3">Signos Vitales {hasInitialMeasurement && <span className="text-xs text-gray-500 font-normal">(si modifica los valores se agregara una nueva medicion a la bitacora)</span>}</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <h2 className="font-bold text-lg mb-3">Signos Vitales {hasInitialMeasurement && <span className="block sm:inline text-xs text-gray-500 font-normal">(si modifica los valores se agregara una nueva medicion a la bitacora)</span>}</h2>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
             <div>
               <label className="block text-xs text-gray-600 mb-1">PA Sistolica (mmHg)</label>
               <input type="number" value={vitals.systolicBP} onChange={e => updateVital('systolicBP', e.target.value)} className="w-full px-2 py-2 border rounded-lg text-sm" placeholder="120" />

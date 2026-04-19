@@ -148,90 +148,90 @@ export default function PatientDetailPage() {
 
   return (
     <div className="max-w-4xl mx-auto">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold">{patient.fullName}</h1>
-          <div className="flex items-center gap-3 mt-1">
+      {/* Header — stacks on mobile, row on sm+ */}
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between mb-6 gap-3">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold break-words">{patient.fullName}</h1>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className={`px-3 py-1 rounded-full text-xs font-medium ${patient.triageColor === 'RED' ? 'bg-red-100 text-red-800' : patient.triageColor === 'YELLOW' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'}`}>
               {patient.triageColor || 'Sin Triage'}
             </span>
             <span className="text-sm text-gray-500">{STATUS_LABELS[patient.status]}</span>
           </div>
         </div>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 sm:flex-shrink-0">
           {(patient.status === 'WAITING_TRIAGE' || patient.status === 'WAITING_ATTENTION') && can('attentions:create') && (
-            <button onClick={handleStartAttention} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Iniciar Atencion</button>
+            <button onClick={handleStartAttention} className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 whitespace-nowrap">Iniciar Atencion</button>
           )}
           {patient.status === 'IN_ATTENTION' && can('attentions:update') && (
-            <Link to={`/patients/${id}/attend`} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Editar Atencion</Link>
+            <Link to={`/patients/${id}/attend`} className="flex-1 sm:flex-none px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 text-center whitespace-nowrap">Editar Atencion</Link>
           )}
           {patient.status === 'IN_ATTENTION' && can('discharge') && (
-            <button onClick={() => setShowDischarge(true)} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">Dar de Alta</button>
+            <button onClick={() => setShowDischarge(true)} className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700 whitespace-nowrap">Dar de Alta</button>
           )}
           {can('patients:update') && (
-            <Link to={`/patients/${id}/edit`} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 font-medium">Editar</Link>
+            <Link to={`/patients/${id}/edit`} className="flex-1 sm:flex-none px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 font-medium text-center">Editar</Link>
           )}
           {can('patients:delete') && (
-            <button onClick={handleDeletePatient} className="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100 font-medium">Eliminar</button>
+            <button onClick={handleDeletePatient} className="flex-1 sm:flex-none px-4 py-2 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100 font-medium">Eliminar</button>
           )}
         </div>
       </div>
 
       {/* Patient info */}
-      <div className="bg-white rounded-xl border p-6 mb-6">
+      <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
         <h2 className="font-bold text-lg mb-4">Datos del Paciente</h2>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
-          <div><span className="text-gray-500">Edad:</span> {patient.age} anos</div>
-          <div><span className="text-gray-500">Sexo:</span> {patient.sex === 'M' ? 'Masculino' : 'Femenino'}</div>
-          <div><span className="text-gray-500">Congregacion:</span> {patient.congregation?.name}</div>
-          <div><span className="text-gray-500">Acompanante:</span> {patient.companionName} ({patient.companionPhone})</div>
-          <div><span className="text-gray-500">Motivo:</span> {patient.reasonForVisit}</div>
-          {patient.knownAllergies && <div><span className="text-gray-500">Alergias:</span> {patient.knownAllergies}</div>}
-          {patient.currentMedications && <div><span className="text-gray-500">Medicamentos:</span> {patient.currentMedications}</div>}
-          {patient.chronicConditions && <div><span className="text-gray-500">Condiciones cronicas:</span> {patient.chronicConditions}</div>}
-          <div><span className="text-gray-500">Ingreso:</span> {new Date(patient.createdAt).toLocaleString('es-CL')}</div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 text-sm">
+          <div className="break-words"><span className="text-gray-500">Edad:</span> {patient.age} anos</div>
+          <div className="break-words"><span className="text-gray-500">Sexo:</span> {patient.sex === 'M' ? 'Masculino' : 'Femenino'}</div>
+          <div className="break-words"><span className="text-gray-500">Congregacion:</span> {patient.congregation?.name}</div>
+          <div className="break-words"><span className="text-gray-500">Acompanante:</span> {patient.companionName} ({patient.companionPhone})</div>
+          <div className="break-words sm:col-span-2 lg:col-span-1"><span className="text-gray-500">Motivo:</span> {patient.reasonForVisit}</div>
+          {patient.knownAllergies && <div className="break-words"><span className="text-gray-500">Alergias:</span> {patient.knownAllergies}</div>}
+          {patient.currentMedications && <div className="break-words"><span className="text-gray-500">Medicamentos:</span> {patient.currentMedications}</div>}
+          {patient.chronicConditions && <div className="break-words"><span className="text-gray-500">Condiciones cronicas:</span> {patient.chronicConditions}</div>}
+          <div className="break-words"><span className="text-gray-500">Ingreso:</span> {new Date(patient.createdAt).toLocaleString('es-CL')}</div>
         </div>
       </div>
 
       {/* Triage */}
       {patient.triage && (
-        <div className="bg-white rounded-xl border p-6 mb-6">
+        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
           <h2 className="font-bold text-lg mb-4">Triage</h2>
           {patient.triage.answers.map(a => (
-            <div key={a.id} className="flex justify-between py-2 border-b last:border-0 text-sm">
-              <span className="text-gray-600">{a.question.question}</span>
-              <span className="font-medium">{a.answer}</span>
+            <div key={a.id} className="flex flex-col sm:flex-row sm:justify-between py-2 border-b last:border-0 text-sm gap-1">
+              <span className="text-gray-600 sm:flex-1">{a.question.question}</span>
+              <span className="font-medium sm:text-right">{a.answer}</span>
             </div>
           ))}
-          {patient.triage.notes && <p className="mt-3 text-sm text-gray-600">Observaciones: {patient.triage.notes}</p>}
+          {patient.triage.notes && <p className="mt-3 text-sm text-gray-600 break-words">Observaciones: {patient.triage.notes}</p>}
         </div>
       )}
 
       {/* Attention & Measurements */}
       {latestAttention && (
-        <div className="bg-white rounded-xl border p-6 mb-6">
-          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
-            <h2 className="font-bold text-lg">Atencion - {latestAttention.attendedBy.name}</h2>
+        <div className="bg-white rounded-xl border p-4 sm:p-6 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-3">
+            <h2 className="font-bold text-lg break-words">Atencion - {latestAttention.attendedBy.name}</h2>
             <div className="flex gap-2 flex-wrap">
               {patient.status === 'IN_ATTENTION' && can('measurements:create') && (
-                <button onClick={() => setShowMeasurementForm(!showMeasurementForm)} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200">
+                <button onClick={() => setShowMeasurementForm(!showMeasurementForm)} className="flex-1 sm:flex-none px-3 py-1.5 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200 whitespace-nowrap">
                   + Medicion
                 </button>
               )}
               {can('attentions:update') && (
-                <Link to={`/patients/${id}/attend`} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">Editar</Link>
+                <Link to={`/patients/${id}/attend`} className="flex-1 sm:flex-none px-3 py-1.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 text-center">Editar</Link>
               )}
               {can('attentions:delete') && (
-                <button onClick={handleDeleteAttention} className="px-3 py-1 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100">Eliminar atencion</button>
+                <button onClick={handleDeleteAttention} className="flex-1 sm:flex-none px-3 py-1.5 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100 whitespace-nowrap">Eliminar</button>
               )}
             </div>
           </div>
 
-          {latestAttention.presumptiveDiagnosis && <p className="text-sm mb-2"><strong>Diagnostico:</strong> {latestAttention.presumptiveDiagnosis}</p>}
-          {latestAttention.treatment && <p className="text-sm mb-2"><strong>Tratamiento:</strong> {latestAttention.treatment}</p>}
-          {latestAttention.medicationsGiven && <p className="text-sm mb-2"><strong>Medicamentos:</strong> {latestAttention.medicationsGiven}</p>}
-          {latestAttention.doctorNotes && <p className="text-sm mb-2"><strong>Notas del doctor:</strong> {latestAttention.doctorNotes}</p>}
+          {latestAttention.presumptiveDiagnosis && <p className="text-sm mb-2 break-words"><strong>Diagnostico:</strong> {latestAttention.presumptiveDiagnosis}</p>}
+          {latestAttention.treatment && <p className="text-sm mb-2 break-words"><strong>Tratamiento:</strong> {latestAttention.treatment}</p>}
+          {latestAttention.medicationsGiven && <p className="text-sm mb-2 break-words"><strong>Medicamentos:</strong> {latestAttention.medicationsGiven}</p>}
+          {latestAttention.doctorNotes && <p className="text-sm mb-2 break-words"><strong>Notas del doctor:</strong> {latestAttention.doctorNotes}</p>}
 
           {/* Measurement form */}
           {showMeasurementForm && (
@@ -344,13 +344,13 @@ export default function PatientDetailPage() {
 
       {/* Discharge modal */}
       {showDischarge && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4 overflow-y-auto">
+          <div className="bg-white rounded-xl p-5 sm:p-6 w-full max-w-md my-8">
             <h3 className="text-lg font-bold mb-4">Dar de Alta</h3>
-            <textarea value={dischargeNotes} onChange={e => setDischargeNotes(e.target.value)} placeholder="Indicaciones de egreso..." rows={4} className="w-full px-3 py-2 border rounded-lg mb-4" />
-            <div className="flex gap-2">
-              <button onClick={() => setShowDischarge(false)} className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50">Cancelar</button>
-              <button onClick={handleDischarge} className="flex-1 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700">Confirmar Alta</button>
+            <textarea value={dischargeNotes} onChange={e => setDischargeNotes(e.target.value)} placeholder="Indicaciones de egreso..." rows={4} className="w-full px-3 py-2 border rounded-lg mb-4 text-sm" />
+            <div className="flex flex-col sm:flex-row gap-2">
+              <button onClick={() => setShowDischarge(false)} className="flex-1 px-4 py-2.5 border rounded-lg hover:bg-gray-50 text-sm font-medium">Cancelar</button>
+              <button onClick={handleDischarge} className="flex-1 px-4 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 text-sm font-semibold">Confirmar Alta</button>
             </div>
           </div>
         </div>
@@ -358,7 +358,7 @@ export default function PatientDetailPage() {
 
       {/* Emergencies */}
       {patient.emergencies && patient.emergencies.length > 0 && (
-        <div className="bg-red-50 rounded-xl border border-red-200 p-6 mb-6">
+        <div className="bg-red-50 rounded-xl border border-red-200 p-4 sm:p-6 mb-6">
           <h2 className="font-bold text-lg text-red-800 mb-4">Emergencias</h2>
           {patient.emergencies.map(em => (
             <div key={em.id} className="py-2 border-b border-red-200 last:border-0 text-sm">
