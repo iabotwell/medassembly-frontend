@@ -64,6 +64,7 @@ function App() {
           {/* Pacientes */}
           <Route path="/patients" element={<ProtectedRoute permission="patients:read"><PatientsListPage /></ProtectedRoute>} />
           <Route path="/patients/register" element={<ProtectedRoute permission="patients:create"><RegisterPage /></ProtectedRoute>} />
+          <Route path="/patients/:id/edit" element={<ProtectedRoute permission="patients:update"><RegisterPage /></ProtectedRoute>} />
           <Route path="/patients/queue" element={<ProtectedRoute permission="patients:read"><QueuePage /></ProtectedRoute>} />
           <Route path="/patients/:id" element={<ProtectedRoute permission="patients:read"><PatientDetailPage /></ProtectedRoute>} />
           <Route path="/patients/:id/triage" element={<ProtectedRoute permission="triage:create"><TriagePage /></ProtectedRoute>} />

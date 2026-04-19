@@ -13,6 +13,14 @@ export const patientService = {
     const { data } = await api.get(`/patients/${id}`);
     return data;
   },
+  update: async (id: string, body: any) => {
+    const { data } = await api.put(`/patients/${id}`, body);
+    return data;
+  },
+  remove: async (id: string) => {
+    const { data } = await api.delete(`/patients/${id}`);
+    return data;
+  },
   updateStatus: async (id: string, status: string) => {
     const { data } = await api.patch(`/patients/${id}/status`, { status });
     return data;

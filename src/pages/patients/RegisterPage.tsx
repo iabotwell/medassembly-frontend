@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { patientService } from '../../services/patientService';
 import api from '../../services/api';
 import { Congregation, Elder } from '../../types';
@@ -8,6 +8,8 @@ const CHRONIC_OPTIONS = ['Diabetes', 'Hipertension', 'Asma', 'Cardiopatia', 'Epi
 
 export default function RegisterPage() {
   const navigate = useNavigate();
+  const { id: editId } = useParams<{ id: string }>();
+  const isEdit = !!editId;
   const [congregations, setCongregations] = useState<Congregation[]>([]);
   const [elders, setElders] = useState<Elder[]>([]);
   const [elderSelection, setElderSelection] = useState<string>('');
@@ -25,6 +27,39 @@ export default function RegisterPage() {
   useEffect(() => {
     api.get('/congregations').then(({ data }) => setCongregations(data));
   }, []);
+
+  useEffect(() => {
+    if (!editId) return;
+    patientService.getDetail(editId).then(p => {
+      setForm({
+        fullName: p.fullName || '',
+        documentId: p.documentId || '',
+        age: String(p.age || ''),
+        sex: p.sex || 'M',
+        congregationId: p.congregationId || '',
+        companionName: p.companionName || '',
+        companionPhone: p.companionPhone || '',
+        elderName: p.elderName || '',
+        elderPhone: p.elderPhone || '',
+        reasonForVisit: p.reasonForVisit || '',
+        knownAllergies: p.knownAllergies || '',
+        currentMedications: p.currentMedications || '',
+        chronicConditions: p.chronicConditions || '',
+      });
+      // Parse chronicConditions back to Set
+      if (p.chronicConditions) {
+        const parts = p.chronicConditions.split(',').map((s: string) => s.trim()).filter(Boolean);
+        const known = new Set<string>();
+        const others: string[] = [];
+        parts.forEach((part: string) => {
+          if (CHRONIC_OPTIONS.includes(part)) known.add(part);
+          else others.push(part);
+        });
+        if (others.length) { known.add('Otro'); setChronicOther(others.join(', ')); }
+        setChronicSelected(known);
+      }
+    }).catch(() => setError('No se pudo cargar el paciente'));
+  }, [editId]);
 
   useEffect(() => {
     if (form.congregationId) {
@@ -70,14 +105,13 @@ export default function RegisterPage() {
           });
         } catch { }
       }
-      const patient = await patientService.create({
-        ...form,
-        age: parseInt(form.age),
-        chronicConditions,
-      });
+      const payload = { ...form, age: parseInt(form.age), chronicConditions };
+      const patient = isEdit
+        ? await patientService.update(editId!, payload)
+        : await patientService.create(payload);
       navigate(`/patients/${patient.id}`);
     } catch (err: any) {
-      setError(err.response?.data?.error || 'Error al registrar paciente');
+      setError(err.response?.data?.error || (isEdit ? 'Error al actualizar paciente' : 'Error al registrar paciente'));
     } finally {
       setLoading(false);
     }
@@ -92,8 +126,8 @@ export default function RegisterPage() {
     <div className="max-w-4xl mx-auto">
       {/* Header */}
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Registrar Paciente</h1>
-        <p className="text-sm text-gray-500 mt-1">Complete los datos del paciente para iniciar el flujo de atencion</p>
+        <h1 className="text-2xl font-bold text-gray-900">{isEdit ? 'Editar Paciente' : 'Registrar Paciente'}</h1>
+        <p className="text-sm text-gray-500 mt-1">{isEdit ? 'Modifique los datos del paciente' : 'Complete los datos del paciente para iniciar el flujo de atencion'}</p>
       </div>
 
       {error && (
@@ -283,9 +317,9 @@ export default function RegisterPage() {
             {loading ? (
               <span className="flex items-center justify-center gap-2">
                 <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"/></svg>
-                Registrando...
+                {isEdit ? 'Guardando...' : 'Registrando...'}
               </span>
-            ) : '✓ Registrar Paciente'}
+            ) : (isEdit ? '✓ Guardar cambios' : '✓ Registrar Paciente')}
           </button>
         </div>
       </form>

@@ -37,6 +37,17 @@ export default function PatientDetailPage() {
     } catch { }
   };
 
+  const handleDeletePatient = async () => {
+    if (!id || !patient) return;
+    if (!window.confirm(`Eliminar al paciente "${patient.fullName}" de forma permanente?\n\nEsto eliminara sus datos y triage. Las atenciones lo bloquearan.`)) return;
+    try {
+      await patientService.remove(id);
+      navigate('/patients');
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'No se pudo eliminar el paciente');
+    }
+  };
+
   const handleAddMeasurement = async () => {
     const attention = patient?.attentions?.[0];
     if (!attention) return;
@@ -78,7 +89,7 @@ export default function PatientDetailPage() {
             <span className="text-sm text-gray-500">{STATUS_LABELS[patient.status]}</span>
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           {(patient.status === 'WAITING_TRIAGE' || patient.status === 'WAITING_ATTENTION') && can('attentions:create') && (
             <button onClick={handleStartAttention} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700">Iniciar Atencion</button>
           )}
@@ -87,6 +98,12 @@ export default function PatientDetailPage() {
           )}
           {patient.status === 'IN_ATTENTION' && can('discharge') && (
             <button onClick={() => setShowDischarge(true)} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm hover:bg-green-700">Dar de Alta</button>
+          )}
+          {can('patients:update') && (
+            <Link to={`/patients/${id}/edit`} className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 font-medium">Editar</Link>
+          )}
+          {can('patients:delete') && (
+            <button onClick={handleDeletePatient} className="px-4 py-2 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100 font-medium">Eliminar</button>
           )}
         </div>
       </div>
