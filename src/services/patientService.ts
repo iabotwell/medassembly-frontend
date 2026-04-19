@@ -17,8 +17,8 @@ export const patientService = {
     const { data } = await api.put(`/patients/${id}`, body);
     return data;
   },
-  remove: async (id: string) => {
-    const { data } = await api.delete(`/patients/${id}`);
+  remove: async (id: string, force = false) => {
+    const { data } = await api.delete(`/patients/${id}`, { params: force ? { force: 'true' } : {} });
     return data;
   },
   updateStatus: async (id: string, status: string) => {

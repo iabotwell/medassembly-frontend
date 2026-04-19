@@ -141,13 +141,21 @@ export default function PatientDetailPage() {
       {/* Attention & Measurements */}
       {latestAttention && (
         <div className="bg-white rounded-xl border p-6 mb-6">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between mb-4 gap-2 flex-wrap">
             <h2 className="font-bold text-lg">Atencion - {latestAttention.attendedBy.name}</h2>
-            {patient.status === 'IN_ATTENTION' && can('measurements:create') && (
-              <button onClick={() => setShowMeasurementForm(!showMeasurementForm)} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200">
-                + Medicion
-              </button>
-            )}
+            <div className="flex gap-2 flex-wrap">
+              {patient.status === 'IN_ATTENTION' && can('measurements:create') && (
+                <button onClick={() => setShowMeasurementForm(!showMeasurementForm)} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-lg text-sm hover:bg-blue-200">
+                  + Medicion
+                </button>
+              )}
+              {can('attentions:update') && (
+                <Link to={`/patients/${id}/attend`} className="px-3 py-1 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200">Editar</Link>
+              )}
+              {can('attentions:delete') && (
+                <button onClick={handleDeleteAttention} className="px-3 py-1 bg-red-50 text-red-700 rounded-lg text-sm hover:bg-red-100">Eliminar atencion</button>
+              )}
+            </div>
           </div>
 
           {latestAttention.presumptiveDiagnosis && <p className="text-sm mb-2"><strong>Diagnostico:</strong> {latestAttention.presumptiveDiagnosis}</p>}
@@ -208,9 +216,14 @@ export default function PatientDetailPage() {
               <div className="space-y-3">
                 {latestAttention.measurements.map(m => (
                   <div key={m.id} className="bg-gray-50 rounded-lg p-3 text-xs">
-                    <div className="flex justify-between mb-1">
-                      <span className="font-medium">{new Date(m.createdAt).toLocaleTimeString('es-CL')}</span>
-                      <span className="text-gray-500">por {m.measuredBy.name}</span>
+                    <div className="flex justify-between mb-1 items-center gap-2">
+                      <div>
+                        <span className="font-medium">{new Date(m.createdAt).toLocaleTimeString('es-CL')}</span>
+                        <span className="text-gray-500 ml-2">por {m.measuredBy.name}</span>
+                      </div>
+                      {can('measurements:delete') && (
+                        <button onClick={() => handleDeleteMeasurement(m.id)} className="text-red-500 hover:text-red-700 text-xs font-medium">Eliminar</button>
+                      )}
                     </div>
                     <div className="grid grid-cols-4 gap-2">
                       {m.systolicBP && <span>PA: {m.systolicBP}/{m.diastolicBP}</span>}

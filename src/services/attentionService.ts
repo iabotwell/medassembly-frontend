@@ -29,4 +29,12 @@ export const attentionService = {
     const { data } = await api.post(`/attentions/${attentionId}/measurements`, body);
     return data;
   },
+  remove: async (id: string) => {
+    const { data } = await api.delete(`/attentions/${id}`);
+    return data;
+  },
+  removeMeasurement: async (attentionId: string, measurementId: string) => {
+    const { data } = await api.delete(`/attentions/${attentionId}/measurements/${measurementId}`);
+    return data;
+  },
 };
