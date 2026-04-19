@@ -22,6 +22,8 @@ export default function PatientDetailPage() {
   const [measurementData, setMeasurementData] = useState<Partial<Measurement>>({});
   const [dischargeNotes, setDischargeNotes] = useState('');
   const [showDischarge, setShowDischarge] = useState(false);
+  const [editingMeasurementId, setEditingMeasurementId] = useState<string | null>(null);
+  const [editMeasurementData, setEditMeasurementData] = useState<Partial<Measurement>>({});
 
   useEffect(() => {
     if (id) {
@@ -80,6 +82,40 @@ export default function PatientDetailPage() {
     } catch (err: any) {
       alert(err.response?.data?.error || 'No se pudo eliminar la medicion');
     }
+  };
+
+  const openEditMeasurement = (m: Measurement) => {
+    setEditingMeasurementId(m.id);
+    setEditMeasurementData({
+      systolicBP: m.systolicBP,
+      diastolicBP: m.diastolicBP,
+      heartRate: m.heartRate,
+      respiratoryRate: m.respiratoryRate,
+      temperature: m.temperature,
+      oxygenSaturation: m.oxygenSaturation,
+      bloodGlucose: m.bloodGlucose,
+      glasgowScore: m.glasgowScore,
+      observation: m.observation,
+    });
+  };
+
+  const handleSaveEditMeasurement = async () => {
+    const attention = patient?.attentions?.[0];
+    if (!attention || !editingMeasurementId) return;
+    try {
+      await attentionService.updateMeasurement(attention.id, editingMeasurementId, editMeasurementData);
+      setEditingMeasurementId(null);
+      setEditMeasurementData({});
+      const updated = await patientService.getDetail(id!);
+      setPatient(updated);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'No se pudo actualizar la medicion');
+    }
+  };
+
+  const cancelEditMeasurement = () => {
+    setEditingMeasurementId(null);
+    setEditMeasurementData({});
   };
 
   const handleAddMeasurement = async () => {
@@ -255,20 +291,49 @@ export default function PatientDetailPage() {
                         <span className="font-medium">{new Date(m.createdAt).toLocaleTimeString('es-CL')}</span>
                         <span className="text-gray-500 ml-2">por {m.measuredBy.name}</span>
                       </div>
-                      {can('measurements:delete') && (
-                        <button onClick={() => handleDeleteMeasurement(m.id)} className="text-red-500 hover:text-red-700 text-xs font-medium">Eliminar</button>
+                      {editingMeasurementId !== m.id && (
+                        <div className="flex gap-2">
+                          {can('measurements:update') && (
+                            <button onClick={() => openEditMeasurement(m)} className="text-blue-600 hover:text-blue-800 text-xs font-medium">Editar</button>
+                          )}
+                          {can('measurements:delete') && (
+                            <button onClick={() => handleDeleteMeasurement(m.id)} className="text-red-500 hover:text-red-700 text-xs font-medium">Eliminar</button>
+                          )}
+                        </div>
                       )}
                     </div>
-                    <div className="grid grid-cols-4 gap-2">
-                      {m.systolicBP && <span>PA: {m.systolicBP}/{m.diastolicBP}</span>}
-                      {m.heartRate && <span>FC: {m.heartRate}</span>}
-                      {m.respiratoryRate && <span>FR: {m.respiratoryRate}</span>}
-                      {m.temperature && <span>T: {m.temperature}C</span>}
-                      {m.oxygenSaturation && <span>SpO2: {m.oxygenSaturation}%</span>}
-                      {m.bloodGlucose && <span>Glic: {m.bloodGlucose}</span>}
-                      {m.glasgowScore && <span>Glasgow: {m.glasgowScore}</span>}
-                    </div>
-                    {m.observation && <p className="mt-1 text-gray-600">{m.observation}</p>}
+                    {editingMeasurementId === m.id ? (
+                      <div className="mt-2 bg-white rounded-lg p-3 border border-blue-200 space-y-2">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          <div><label className="text-xs text-gray-500">PA Sistolica</label><input type="number" value={editMeasurementData.systolicBP ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, systolicBP: e.target.value ? parseInt(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                          <div><label className="text-xs text-gray-500">PA Diastolica</label><input type="number" value={editMeasurementData.diastolicBP ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, diastolicBP: e.target.value ? parseInt(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                          <div><label className="text-xs text-gray-500">FC</label><input type="number" value={editMeasurementData.heartRate ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, heartRate: e.target.value ? parseInt(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                          <div><label className="text-xs text-gray-500">FR</label><input type="number" value={editMeasurementData.respiratoryRate ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, respiratoryRate: e.target.value ? parseInt(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                          <div><label className="text-xs text-gray-500">Temp</label><input type="number" step="0.1" value={editMeasurementData.temperature ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, temperature: e.target.value ? parseFloat(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                          <div><label className="text-xs text-gray-500">SpO2</label><input type="number" value={editMeasurementData.oxygenSaturation ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, oxygenSaturation: e.target.value ? parseInt(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                          <div><label className="text-xs text-gray-500">Glicemia</label><input type="number" step="0.1" value={editMeasurementData.bloodGlucose ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, bloodGlucose: e.target.value ? parseFloat(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                          <div><label className="text-xs text-gray-500">Glasgow</label><input type="number" min={3} max={15} value={editMeasurementData.glasgowScore ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, glasgowScore: e.target.value ? parseInt(e.target.value) : undefined }))} className="w-full px-2 py-1 border rounded text-xs" /></div>
+                        </div>
+                        <input type="text" value={editMeasurementData.observation ?? ''} onChange={e => setEditMeasurementData(p => ({ ...p, observation: e.target.value }))} placeholder="Observacion" className="w-full px-2 py-1 border rounded text-xs" />
+                        <div className="flex gap-2">
+                          <button onClick={cancelEditMeasurement} className="px-3 py-1 border rounded text-xs font-medium">Cancelar</button>
+                          <button onClick={handleSaveEditMeasurement} className="flex-1 px-3 py-1 bg-blue-600 text-white rounded text-xs font-semibold">Guardar cambios</button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <div className="grid grid-cols-4 gap-2">
+                          {m.systolicBP && <span>PA: {m.systolicBP}/{m.diastolicBP}</span>}
+                          {m.heartRate && <span>FC: {m.heartRate}</span>}
+                          {m.respiratoryRate && <span>FR: {m.respiratoryRate}</span>}
+                          {m.temperature && <span>T: {m.temperature}C</span>}
+                          {m.oxygenSaturation && <span>SpO2: {m.oxygenSaturation}%</span>}
+                          {m.bloodGlucose && <span>Glic: {m.bloodGlucose}</span>}
+                          {m.glasgowScore && <span>Glasgow: {m.glasgowScore}</span>}
+                        </div>
+                        {m.observation && <p className="mt-1 text-gray-600">{m.observation}</p>}
+                      </>
+                    )}
                   </div>
                 ))}
               </div>

@@ -37,4 +37,8 @@ export const attentionService = {
     const { data } = await api.delete(`/attentions/${attentionId}/measurements/${measurementId}`);
     return data;
   },
+  updateMeasurement: async (attentionId: string, measurementId: string, body: any) => {
+    const { data } = await api.put(`/attentions/${attentionId}/measurements/${measurementId}`, body);
+    return data;
+  },
 };
