@@ -39,12 +39,46 @@ export default function PatientDetailPage() {
 
   const handleDeletePatient = async () => {
     if (!id || !patient) return;
-    if (!window.confirm(`Eliminar al paciente "${patient.fullName}" de forma permanente?\n\nEsto eliminara sus datos y triage. Las atenciones lo bloquearan.`)) return;
+    const hasData = (patient.attentions?.length || 0) > 0 || (patient.emergencies?.length || 0) > 0;
+    let force = false;
+    if (hasData) {
+      const msg = `El paciente "${patient.fullName}" tiene atenciones o emergencias registradas.\n\nOK = eliminar TODO (atenciones, mediciones, emergencias, triage)\nCancelar = no hacer nada`;
+      if (!window.confirm(msg)) return;
+      force = true;
+    } else {
+      if (!window.confirm(`Eliminar al paciente "${patient.fullName}" de forma permanente?`)) return;
+    }
     try {
-      await patientService.remove(id);
+      await patientService.remove(id, force);
       navigate('/patients');
     } catch (err: any) {
       alert(err.response?.data?.error || 'No se pudo eliminar el paciente');
+    }
+  };
+
+  const handleDeleteAttention = async () => {
+    const attention = patient?.attentions?.[0];
+    if (!attention) return;
+    if (!window.confirm('Eliminar esta atencion?\n\nSe eliminaran todas las mediciones y registros de insumos asociados.')) return;
+    try {
+      await attentionService.remove(attention.id);
+      const updated = await patientService.getDetail(id!);
+      setPatient(updated);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'No se pudo eliminar la atencion');
+    }
+  };
+
+  const handleDeleteMeasurement = async (measurementId: string) => {
+    const attention = patient?.attentions?.[0];
+    if (!attention) return;
+    if (!window.confirm('Eliminar esta medicion?')) return;
+    try {
+      await attentionService.removeMeasurement(attention.id, measurementId);
+      const updated = await patientService.getDetail(id!);
+      setPatient(updated);
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'No se pudo eliminar la medicion');
     }
   };
 
