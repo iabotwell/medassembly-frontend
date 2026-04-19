@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { attentionService } from '../../services/attentionService';
 import { patientService } from '../../services/patientService';
@@ -30,22 +30,26 @@ export default function AttentionPage() {
   const [hasInitialMeasurement, setHasInitialMeasurement] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
+  const prefilledRef = useRef(false);
 
   useEffect(() => {
-    if (id) {
-      patientService.getDetail(id).then(p => {
-        setPatient(p);
-        const att = p?.attentions?.[0];
-        if (att) {
-          setForm({
-            presumptiveDiagnosis: att.presumptiveDiagnosis || '',
-            treatment: att.treatment || '',
-            medicationsGiven: att.medicationsGiven || '',
-          });
-          setHasInitialMeasurement((att.measurements?.length || 0) > 0);
-        }
-      });
-    }
+    if (!id || prefilledRef.current) return;
+    patientService.getDetail(id).then(p => {
+      setPatient(p);
+      const att = p?.attentions?.[0];
+      if (att && !prefilledRef.current) {
+        setForm({
+          presumptiveDiagnosis: att.presumptiveDiagnosis || '',
+          treatment: att.treatment || '',
+          medicationsGiven: att.medicationsGiven || '',
+        });
+        setHasInitialMeasurement((att.measurements?.length || 0) > 0);
+      }
+      prefilledRef.current = true;
+    }).catch((err) => {
+      setError(err?.response?.data?.error || 'Error al cargar paciente');
+    });
   }, [id]);
 
   const updateVital = (field: keyof VitalsState, value: string) => {
@@ -70,19 +74,29 @@ export default function AttentionPage() {
     if (!id) return;
     setLoading(true);
     setError('');
+    setSuccess('');
     try {
       let attention = patient?.attentions?.[0];
-      if (!attention || patient?.status === 'WAITING_ATTENTION') {
+      // Only create a new attention if there's no attention at all
+      if (!attention) {
         attention = await attentionService.startAttention(id);
       }
-      await attentionService.update(attention!.id, form);
+      const updated = await attentionService.update(attention!.id, form);
 
       const measurementPayload = buildMeasurementPayload();
       if (Object.keys(measurementPayload).length > 0) {
         await attentionService.addMeasurement(attention!.id, measurementPayload);
       }
 
-      navigate(`/patients/${id}`);
+      setSuccess('Atencion guardada correctamente');
+      setVitals(EMPTY_VITALS);
+      // Update form from server response to confirm persistence
+      setForm({
+        presumptiveDiagnosis: updated.presumptiveDiagnosis || '',
+        treatment: updated.treatment || '',
+        medicationsGiven: updated.medicationsGiven || '',
+      });
+      setTimeout(() => navigate(`/patients/${id}`), 1000);
     } catch (err: any) {
       setError(err.response?.data?.error || 'Error al guardar la atencion');
     }
@@ -97,6 +111,7 @@ export default function AttentionPage() {
       <p className="text-gray-600 mb-6">Paciente: <strong>{patient.fullName}</strong> - {patient.age} anos - {patient.sex}</p>
 
       {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm">{error}</div>}
+      {success && <div className="bg-green-50 text-green-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">✓ {success}</div>}
 
       <div className="bg-white rounded-xl border p-6 space-y-6">
         {/* Patient summary */}
