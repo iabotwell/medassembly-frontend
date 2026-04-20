@@ -52,6 +52,7 @@ export interface Patient {
   eventId: string;
   fullName: string;
   documentId?: string;
+  phone?: string;
   age: number;
   sex: string;
   congregationId: string;

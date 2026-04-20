@@ -19,7 +19,7 @@ export default function RegisterPage() {
   const [chronicSelected, setChronicSelected] = useState<Set<string>>(new Set());
   const [chronicOther, setChronicOther] = useState('');
   const [form, setForm] = useState({
-    fullName: '', documentId: '', age: '', sex: 'M', congregationId: '',
+    fullName: '', documentId: '', phone: '', age: '', sex: 'M', congregationId: '',
     companionName: '', companionPhone: '', elderName: '', elderPhone: '',
     reasonForVisit: '', knownAllergies: '', currentMedications: '', chronicConditions: '',
   });
@@ -34,6 +34,7 @@ export default function RegisterPage() {
       setForm({
         fullName: p.fullName || '',
         documentId: p.documentId || '',
+        phone: p.phone || '',
         age: String(p.age || ''),
         sex: p.sex || 'M',
         congregationId: p.congregationId || '',
@@ -156,14 +157,18 @@ export default function RegisterPage() {
               <label className={labelCls}>RUT / Documento ID</label>
               <input type="text" value={form.documentId} onChange={e => updateField('documentId', e.target.value)} className={inputCls} placeholder="12.345.678-9" />
             </div>
-            <div className="md:col-span-2">
+            <div className="md:col-span-3">
+              <label className={labelCls}>Telefono del paciente</label>
+              <input type="tel" value={form.phone} onChange={e => updateField('phone', e.target.value)} className={inputCls} placeholder="+56 9 1234 5678" />
+            </div>
+            <div className="md:col-span-3">
               <label className={labelCls}>Edad *</label>
               <div className="relative">
                 <input type="number" required min={0} max={150} value={form.age} onChange={e => updateField('age', e.target.value)} className={inputCls} placeholder="0" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">anos</span>
               </div>
             </div>
-            <div className="md:col-span-4">
+            <div className="md:col-span-6">
               <label className={labelCls}>Sexo *</label>
               <div className="grid grid-cols-2 gap-2">
                 <button type="button" onClick={() => updateField('sex', 'M')}

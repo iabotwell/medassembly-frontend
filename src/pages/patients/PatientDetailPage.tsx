@@ -5,6 +5,7 @@ import { attentionService } from '../../services/attentionService';
 import { emergencyService } from '../../services/emergencyService';
 import { usePermissions } from '../../hooks/usePermissions';
 import { useDialog } from '../../components/ui/Dialog';
+import ContactActions from '../../components/ui/ContactActions';
 import { Patient, Measurement } from '../../types';
 
 const STATUS_LABELS: Record<string, string> = {
@@ -200,7 +201,22 @@ export default function PatientDetailPage() {
           <div className="break-words"><span className="text-gray-500">Edad:</span> {patient.age} anos</div>
           <div className="break-words"><span className="text-gray-500">Sexo:</span> {patient.sex === 'M' ? 'Masculino' : 'Femenino'}</div>
           <div className="break-words"><span className="text-gray-500">Congregacion:</span> {patient.congregation?.name}</div>
-          <div className="break-words"><span className="text-gray-500">Acompanante:</span> {patient.companionName} ({patient.companionPhone})</div>
+          {patient.phone && (
+            <div className="flex items-center gap-2 flex-wrap">
+              <span><span className="text-gray-500">Telefono:</span> {patient.phone}</span>
+              <ContactActions phone={patient.phone} name={patient.fullName} />
+            </div>
+          )}
+          <div className="break-words flex items-center gap-2 flex-wrap">
+            <span><span className="text-gray-500">Acompanante:</span> {patient.companionName} ({patient.companionPhone})</span>
+            <ContactActions phone={patient.companionPhone} name={patient.companionName} />
+          </div>
+          {patient.elderName && patient.elderPhone && (
+            <div className="break-words flex items-center gap-2 flex-wrap">
+              <span><span className="text-gray-500">Anciano:</span> {patient.elderName} ({patient.elderPhone})</span>
+              <ContactActions phone={patient.elderPhone} name={patient.elderName} />
+            </div>
+          )}
           <div className="break-words sm:col-span-2 lg:col-span-1"><span className="text-gray-500">Motivo:</span> {patient.reasonForVisit}</div>
           {patient.knownAllergies && <div className="break-words"><span className="text-gray-500">Alergias:</span> {patient.knownAllergies}</div>}
           {patient.currentMedications && <div className="break-words"><span className="text-gray-500">Medicamentos:</span> {patient.currentMedications}</div>}
