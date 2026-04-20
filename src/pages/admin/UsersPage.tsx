@@ -102,16 +102,34 @@ export default function UsersPage() {
   };
 
   const handleDelete = async (u: User) => {
-    const ok = await danger({
-      title: `Eliminar a ${u.name}?`,
-      message: 'Esta accion es permanente y no se puede deshacer.',
-    });
-    if (!ok) return;
+    // First attempt: normal delete
     try {
+      const ok = await danger({
+        title: `Eliminar a ${u.name}?`,
+        message: 'Esta accion es permanente y no se puede deshacer.',
+      });
+      if (!ok) return;
       await api.delete(`/users/${u.id}`);
       fetchUsers();
     } catch (err: any) {
-      await showAlert({ title: 'No se pudo eliminar', message: err.response?.data?.error || 'Error desconocido' });
+      const msg = err.response?.data?.error || '';
+      // If blocked due to related records, offer cascade delete
+      if (msg.includes('registros asociados')) {
+        const cascade = await danger({
+          title: `${u.name} tiene registros medicos`,
+          message: `${msg}\n\nLos datos medicos se reasignaran al administrador y el usuario sera eliminado. Desea continuar?`,
+          confirmText: 'Eliminar con cascada',
+        });
+        if (!cascade) return;
+        try {
+          await api.delete(`/users/${u.id}?force=true`);
+          fetchUsers();
+        } catch (err2: any) {
+          await showAlert({ title: 'No se pudo eliminar', message: err2.response?.data?.error || 'Error desconocido' });
+        }
+      } else {
+        await showAlert({ title: 'No se pudo eliminar', message: msg || 'Error desconocido' });
+      }
     }
   };
 
