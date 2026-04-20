@@ -117,8 +117,8 @@ export default function UsersPage() {
       if (msg.includes('registros asociados')) {
         const cascade = await danger({
           title: `${u.name} tiene registros medicos`,
-          message: `${msg}\n\nLos datos medicos se reasignaran al administrador y el usuario sera eliminado. Desea continuar?`,
-          confirmText: 'Eliminar con cascada',
+          message: `${msg}\n\nSe eliminaran TODOS los registros medicos asociados (atenciones, mediciones, emergencias, turnos).\n\nEsta accion es permanente.`,
+          confirmText: 'Eliminar todo',
         });
         if (!cascade) return;
         try {
