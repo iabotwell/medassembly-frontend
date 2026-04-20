@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { attentionService } from '../../services/attentionService';
 import { patientService } from '../../services/patientService';
 import { Patient } from '../../types';
+import ContactActions from '../../components/ui/ContactActions';
 
 type VitalsState = {
   systolicBP: string;
@@ -129,19 +130,32 @@ export default function AttentionPage() {
   return (
     <div className="max-w-3xl mx-auto">
       <h1 className="text-xl sm:text-2xl font-bold mb-2">Atencion Medica</h1>
-      <p className="text-gray-600 mb-6 text-sm sm:text-base break-words">Paciente: <strong>{patient.fullName}</strong> - {patient.age} anos - {patient.sex}</p>
+      <div className="mb-6 flex flex-wrap items-center gap-2">
+        <p className="text-gray-600 text-sm sm:text-base break-words">Paciente: <strong>{patient.fullName}</strong> - {patient.age} anos - {patient.sex}</p>
+        {patient.phone && <ContactActions phone={patient.phone} name={patient.fullName} />}
+      </div>
 
       {error && <div className="bg-red-50 text-red-700 p-3 rounded-lg mb-4 text-sm">{error}</div>}
       {success && <div className="bg-green-50 text-green-700 p-3 rounded-lg mb-4 text-sm flex items-center gap-2">✓ {success}</div>}
 
       <div className="bg-white rounded-xl border p-4 sm:p-6 space-y-6">
         {/* Patient summary */}
-        <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-1">
+        <div className="bg-gray-50 rounded-lg p-4 text-sm space-y-2">
           <p className="break-words"><strong>Motivo:</strong> {patient.reasonForVisit}</p>
           {patient.triage && <p><strong>Triage:</strong> <span className={`font-medium ${patient.triageColor === 'RED' ? 'text-red-600' : patient.triageColor === 'YELLOW' ? 'text-yellow-600' : 'text-blue-600'}`}>{patient.triageColor}</span></p>}
           {patient.knownAllergies && <p className="text-red-600 break-words"><strong>Alergias:</strong> {patient.knownAllergies}</p>}
           {patient.currentMedications && <p className="break-words"><strong>Medicamentos actuales:</strong> {patient.currentMedications}</p>}
           {patient.chronicConditions && <p className="break-words"><strong>Condiciones cronicas:</strong> {patient.chronicConditions}</p>}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-gray-200">
+            <span className="text-gray-600"><strong>Acompanante:</strong> {patient.companionName}</span>
+            <ContactActions phone={patient.companionPhone} name={patient.companionName} />
+          </div>
+          {patient.elderName && patient.elderPhone && (
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-gray-600"><strong>Anciano:</strong> {patient.elderName}</span>
+              <ContactActions phone={patient.elderPhone} name={patient.elderName} />
+            </div>
+          )}
         </div>
 
         {/* Vital signs */}

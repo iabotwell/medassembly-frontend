@@ -11,6 +11,8 @@ export default function RegisterPage() {
   const { id: editId } = useParams<{ id: string }>();
   const isEdit = !!editId;
   const [congregations, setCongregations] = useState<Congregation[]>([]);
+  const [congregationSelection, setCongregationSelection] = useState<string>('');
+  const [newCongregation, setNewCongregation] = useState({ name: '', circuit: '', city: '' });
   const [elders, setElders] = useState<Elder[]>([]);
   const [elderSelection, setElderSelection] = useState<string>('');
   const [saveElder, setSaveElder] = useState(false);
@@ -98,15 +100,38 @@ export default function RegisterPage() {
       if (chronicSelected.has('Otro') && chronicOther.trim()) chronicList.push(chronicOther.trim());
       const chronicConditions = chronicList.join(', ');
 
-      if (elderSelection === 'OTRO' && saveElder && form.congregationId && form.elderName && form.elderPhone) {
+      // Create new congregation if user chose "OTRO"
+      let congregationId = form.congregationId;
+      if (congregationSelection === 'OTRO' && newCongregation.name.trim()) {
         try {
-          await api.post(`/congregations/${form.congregationId}/elders`, {
+          const { data: created } = await api.post('/congregations', newCongregation);
+          congregationId = created.id;
+        } catch (err: any) {
+          setError(err.response?.data?.error || 'No se pudo crear la congregacion');
+          setLoading(false);
+          return;
+        }
+      }
+
+      if (elderSelection === 'OTRO' && saveElder && congregationId && form.elderName && form.elderPhone) {
+        try {
+          await api.post(`/congregations/${congregationId}/elders`, {
             name: form.elderName,
             phone: form.elderPhone,
           });
         } catch { }
       }
-      const payload = { ...form, age: parseInt(form.age), chronicConditions };
+
+      const payload: any = {
+        ...form,
+        congregationId,
+        chronicConditions,
+      };
+      if (form.age) payload.age = parseInt(form.age);
+      else delete payload.age;
+      // Strip empty strings so backend can treat them as undefined
+      Object.keys(payload).forEach(k => { if (payload[k] === '') delete payload[k]; });
+
       const patient = isEdit
         ? await patientService.update(editId!, payload)
         : await patientService.create(payload);
@@ -162,9 +187,9 @@ export default function RegisterPage() {
               <input type="tel" value={form.phone} onChange={e => updateField('phone', e.target.value)} className={inputCls} placeholder="+56 9 1234 5678" />
             </div>
             <div className="md:col-span-3">
-              <label className={labelCls}>Edad *</label>
+              <label className={labelCls}>Edad</label>
               <div className="relative">
-                <input type="number" required min={0} max={150} value={form.age} onChange={e => updateField('age', e.target.value)} className={inputCls} placeholder="0" />
+                <input type="number" min={0} max={150} value={form.age} onChange={e => updateField('age', e.target.value)} className={inputCls} placeholder="0" />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-400">anos</span>
               </div>
             </div>
@@ -196,10 +221,16 @@ export default function RegisterPage() {
           <div className="p-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className={labelCls}>Congregacion *</label>
-                <select required value={form.congregationId} onChange={e => updateField('congregationId', e.target.value)} className={inputCls}>
+                <label className={labelCls}>Congregacion</label>
+                <select value={congregationSelection} onChange={e => {
+                  const v = e.target.value;
+                  setCongregationSelection(v);
+                  if (v === 'OTRO') updateField('congregationId', '');
+                  else updateField('congregationId', v);
+                }} className={inputCls}>
                   <option value="">Seleccionar congregacion...</option>
                   {congregations.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  <option value="OTRO">+ Otra (ingresar manualmente)</option>
                 </select>
               </div>
               <div>
@@ -211,6 +242,30 @@ export default function RegisterPage() {
                 </select>
               </div>
             </div>
+
+            {congregationSelection === 'OTRO' && (
+              <div className="bg-purple-50 border-2 border-dashed border-purple-300 rounded-xl p-4 space-y-3">
+                <div className="flex items-center gap-2 text-sm text-purple-900 font-semibold">
+                  <span>🏛️</span>
+                  <span>Ingresar datos de la nueva congregacion</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div>
+                    <label className={labelCls}>Nombre</label>
+                    <input type="text" value={newCongregation.name} onChange={e => setNewCongregation(p => ({ ...p, name: e.target.value }))} className={inputCls} placeholder="Nombre de la congregacion" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Circuito</label>
+                    <input type="text" value={newCongregation.circuit} onChange={e => setNewCongregation(p => ({ ...p, circuit: e.target.value }))} className={inputCls} placeholder="Opcional" />
+                  </div>
+                  <div>
+                    <label className={labelCls}>Ciudad</label>
+                    <input type="text" value={newCongregation.city} onChange={e => setNewCongregation(p => ({ ...p, city: e.target.value }))} className={inputCls} placeholder="Opcional" />
+                  </div>
+                </div>
+                <p className="text-xs text-purple-900">La congregacion se creara automaticamente al guardar el paciente.</p>
+              </div>
+            )}
 
             {elderSelection === 'OTRO' && (
               <div className="bg-blue-50 border-2 border-dashed border-blue-300 rounded-xl p-4 space-y-3">
@@ -239,12 +294,12 @@ export default function RegisterPage() {
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">👤 Acompanante del paciente</p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className={labelCls}>Nombre del acompanante *</label>
-                  <input type="text" required value={form.companionName} onChange={e => updateField('companionName', e.target.value)} className={inputCls} placeholder="Nombre completo" />
+                  <label className={labelCls}>Nombre del acompanante</label>
+                  <input type="text" value={form.companionName} onChange={e => updateField('companionName', e.target.value)} className={inputCls} placeholder="Nombre completo" />
                 </div>
                 <div>
-                  <label className={labelCls}>Telefono *</label>
-                  <input type="tel" required value={form.companionPhone} onChange={e => updateField('companionPhone', e.target.value)} className={inputCls} placeholder="+56 9 1234 5678" />
+                  <label className={labelCls}>Telefono</label>
+                  <input type="tel" value={form.companionPhone} onChange={e => updateField('companionPhone', e.target.value)} className={inputCls} placeholder="+56 9 1234 5678" />
                 </div>
               </div>
             </div>
@@ -261,7 +316,7 @@ export default function RegisterPage() {
             </div>
           </header>
           <div className="p-6">
-            <textarea required value={form.reasonForVisit} onChange={e => updateField('reasonForVisit', e.target.value)} rows={3} className={inputCls} placeholder="Ej: Dolor de cabeza intenso desde hace 2 horas, mareo, nauseas..." />
+            <textarea value={form.reasonForVisit} onChange={e => updateField('reasonForVisit', e.target.value)} rows={3} className={inputCls} placeholder="Ej: Dolor de cabeza intenso desde hace 2 horas, mareo, nauseas..." />
           </div>
         </section>
 
